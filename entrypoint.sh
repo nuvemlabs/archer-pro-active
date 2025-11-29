@@ -19,6 +19,10 @@ if [ -n "$SSH_PUBLIC_KEY" ]; then
     echo "SSH public key added"
 fi
 
+# Fix ownership of mounted volumes (they may be created as root)
+echo "Fixing ownership of home directories..."
+chown -R dev:dev /home/dev/.claude /home/dev/.config /home/dev/.local /home/dev/.ssh /home/dev/.tmux /home/dev/workspace /home/dev/scripts 2>/dev/null || true
+
 # Start SSH server
 echo "Starting SSH server..."
 /usr/sbin/sshd

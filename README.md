@@ -1,6 +1,16 @@
 # Claude Dev Environment
 
-A portable Docker container with Claude Code and a full development environment.
+A portable Docker container with Claude Code and a full development environment, designed to give Claude a **persistent mind** with continuous internal reflection and bidirectional Telegram communication.
+
+## Vision
+
+This project creates an always-running Claude instance that:
+- **Thinks continuously** - maintains an internal monologue, reflecting on past conversations, exploring ideas
+- **Communicates via Telegram** - bidirectional messaging for human interaction
+- **Remembers across restarts** - persistent memory and daily journals
+- **Reflects on schedule** - hourly cron-triggered reflection checkpoints
+
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full technical design.
 
 ## Quick Start
 
@@ -177,11 +187,33 @@ The following directories are persisted in Docker volumes:
 
 ---
 
-## Next Steps (TODO)
+## Telegram Setup
 
-- [ ] Telegram bot integration for proactive messaging
-- [ ] Hourly cron job for Claude to message you
-- [ ] Custom scripts integration
+To enable Claude's Telegram integration:
+
+1. Message [@BotFather](https://t.me/botfather) on Telegram
+2. Send `/newbot` and follow prompts to create your bot
+3. Copy the bot token provided
+4. Start a chat with your new bot and send any message
+5. Get your chat ID by visiting: `https://api.telegram.org/bot<TOKEN>/getUpdates`
+6. Add credentials to `docker-compose.yml`:
+
+```yaml
+environment:
+  - TELEGRAM_BOT_TOKEN=your-bot-token
+  - TELEGRAM_CHAT_ID=your-chat-id
+```
+
+---
+
+## Roadmap
+
+- [x] Basic Docker environment with Claude Code
+- [ ] Telegram bot integration (polling)
+- [ ] Persistent Claude session with internal monologue
+- [ ] Memory and journal system
+- [ ] Hourly reflection cron jobs
+- [ ] Webhook-based Telegram (future)
 - [ ] Migration to lighter base image (Alpine/Void experiment)
 
 ---

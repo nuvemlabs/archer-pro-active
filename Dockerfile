@@ -110,12 +110,6 @@ ENV PATH="/opt/cargo/bin:$PATH"
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
 
 # ============================================
-# HOMEBREW (Linuxbrew)
-# ============================================
-RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-ENV PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
-
-# ============================================
 # CLOUD CLIs
 # ============================================
 
@@ -171,6 +165,10 @@ RUN mkdir /var/run/sshd \
 # ============================================
 USER dev
 WORKDIR /home/dev
+
+# Homebrew (Linuxbrew) - must be installed as non-root user
+RUN NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+ENV PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
 
 # Oh My Zsh
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
