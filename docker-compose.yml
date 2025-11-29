@@ -1,0 +1,49 @@
+services:
+  claude-dev:
+    build: .
+    container_name: claude-dev-env
+    hostname: claude-dev
+    restart: unless-stopped
+    
+    ports:
+      - "2222:22"      # SSH
+      - "8080:80"      # HTTP (nginx)
+      - "8443:443"     # HTTPS (nginx)
+    
+    environment:
+      # Set a password for SSH access (change this!)
+      - DEV_PASSWORD=changeme123
+      
+      # Optional: Add your SSH public key for key-based auth
+      # - SSH_PUBLIC_KEY=ssh-rsa AAAA... your-key-here
+      
+      # Optional: Cloudflare Tunnel token (get from Cloudflare dashboard)
+      # - CLOUDFLARE_TUNNEL_TOKEN=your-token-here
+    
+    volumes:
+      # Persist workspace and user data
+      - claude-workspace:/home/dev/workspace
+      - claude-scripts:/home/dev/scripts
+      - claude-ssh:/home/dev/.ssh
+      - claude-config:/home/dev/.config
+      - claude-local:/home/dev/.local
+      - claude-claude:/home/dev/.claude
+      
+      # Persist tmux sessions
+      - claude-tmux:/home/dev/.tmux
+      
+      # Optional: Mount your local projects
+      # - /path/to/your/projects:/home/dev/projects
+    
+    # For Cloudflare Tunnel to work properly
+    cap_add:
+      - NET_ADMIN
+
+volumes:
+  claude-workspace:
+  claude-scripts:
+  claude-ssh:
+  claude-config:
+  claude-local:
+  claude-claude:
+  claude-tmux:
