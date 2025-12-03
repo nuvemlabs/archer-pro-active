@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "Bash(cat:*)",
+      "Read(//home/dev/workspace/mind/**)",
+      "Write(//home/dev/workspace/mind/**)",
+      "Edit(//home/dev/workspace/mind/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
