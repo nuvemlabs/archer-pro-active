@@ -209,8 +209,36 @@ alias lg="lazygit"\n\
 RUN mkdir -p ~/workspace ~/scripts ~/.ssh
 RUN chmod 700 ~/.ssh
 
+# Create mind directory structure
+RUN mkdir -p ~/workspace/mind/journal ~/workspace/mind/message_queue ~/workspace/mind/conversations
+
 # Back to root for entrypoint
 USER root
+
+# ============================================
+# INSTALL TELEGRAM BOT DEPENDENCIES (in venv)
+# ============================================
+COPY scripts/telegram/requirements.txt /tmp/telegram-requirements.txt
+RUN python3 -m venv /opt/venv \
+    && /opt/venv/bin/pip install --upgrade pip \
+    && /opt/venv/bin/pip install -r /tmp/telegram-requirements.txt \
+    && rm /tmp/telegram-requirements.txt
+ENV PATH="/opt/venv/bin:$PATH"
+
+# ============================================
+# COPY SCRIPTS AND TEMPLATES
+# ============================================
+COPY scripts/ /opt/scripts/
+COPY mind/ /opt/mind-template/
+
+# Copy Claude auth import if exists (for pre-authenticated containers)
+COPY .claude-auth-import/ /opt/claude-auth-import/
+
+RUN chmod -R 755 /opt/scripts \
+    && chmod +x /opt/scripts/telegram/*.py \
+    && chmod +x /opt/scripts/claude/*.sh \
+    && ln -s /opt/scripts/telegram/send_message.py /usr/local/bin/send-telegram \
+    && ln -s /opt/scripts/claude/session_manager.sh /usr/local/bin/claude-session
 
 # ============================================
 # ENTRYPOINT SCRIPT
