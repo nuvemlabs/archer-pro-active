@@ -77,9 +77,64 @@ Environment variables in `docker-compose.yml`:
 - `DEV_PASSWORD` - SSH password for dev user
 - `SSH_PUBLIC_KEY` - Optional public key for key-based auth
 - `CLOUDFLARE_TUNNEL_TOKEN` - Optional Cloudflare Tunnel token for external access
+- `TELEGRAM_BOT_TOKEN` - Telegram bot token for messaging integration
+- `TELEGRAM_CHAT_ID` - Authorized Telegram chat ID
 
-## Planned Features (TODO)
+## Persistent Mind Features
 
-- Telegram bot integration for proactive messaging
-- Hourly cron job for Claude communication
-- Custom scripts integration
+### Claude Session Management
+
+The persistent Claude session is managed via `/usr/local/bin/claude-session` script:
+
+```bash
+claude-session start    # Start Claude in tmux
+claude-session stop     # Stop Claude session
+claude-session restart  # Restart session
+claude-session status   # Check if running
+claude-session attach   # Attach to interactive session
+claude-session send "message"  # Send input to Claude
+```
+
+The session starts automatically on container boot with:
+- **Bypass permissions mode** enabled (hands-free operation using `--permission-mode bypassPermissions`)
+- **Theme wizard skipped** via `~/.claude.json` with `"hasCompletedOnboarding": true`
+- **Automated warning acceptance** using tmux key automation (Down arrow + Enter)
+- **Initial prompt** sent to begin persistent mind loop
+- **Message queue** monitoring for Telegram integration
+
+### Telegram Bot Integration
+
+The Telegram bot (`/opt/scripts/telegram/bot.py`) runs automatically and:
+- Polls for messages every 10 seconds
+- Queues incoming messages to `/home/dev/workspace/mind/message_queue/`
+- Only accepts messages from authorized `TELEGRAM_CHAT_ID`
+- Provides `/opt/venv/bin/python /opt/scripts/telegram/send_message.py` for Claude to send replies
+
+### Hourly Reflection Cron
+
+A cron job runs every hour (`0 * * * *`) via `/opt/scripts/claude/reflection_cron.sh` to:
+- Create a reflection checkpoint message in the message queue
+- Prompt Claude to review journal entries and update memory
+- Encourage periodic self-reflection and pattern recognition
+
+### File Structure
+
+```
+/home/dev/workspace/mind/
+├── system_prompt.md          # Claude's behavioral instructions
+├── memory.md                 # Persistent memory storage
+├── journal/                  # Daily journal entries (YYYY-MM-DD.md)
+├── message_queue/            # Incoming messages (.msg files)
+└── conversations/            # Conversation history backups
+```
+
+## Implementation Status
+
+- ✅ Telegram bot integration (polling mode)
+- ✅ Hourly cron-based reflection checkpoints
+- ✅ Persistent Claude session with tmux
+- ✅ Hands-free container startup (bypass permissions + wizard skip)
+- ✅ Message queue system
+- ✅ Journal and memory file structure
+- ⏳ Claude message processing loop (manual for now)
+- ⏳ End-to-end Telegram → Claude → Response flow

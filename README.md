@@ -187,6 +187,51 @@ The following directories are persisted in Docker volumes:
 
 ---
 
+## Claude Authentication
+
+### Option 1: Import from Host (Recommended)
+
+If you already have Claude authenticated on your host machine, import it before building:
+
+```bash
+# Import your existing Claude authentication
+./scripts/import-claude-auth.sh
+
+# Build and start - Claude will be pre-authenticated!
+docker compose build
+docker compose up -d
+
+# First time only: Complete the theme selection wizard
+docker exec -it -u dev claude-dev-env claude-session attach
+# Select option 1 (Dark mode) or your preference
+# Press Ctrl+B then D to detach
+# The wizard won't appear again - settings persist in the volume
+```
+
+### Option 2: Authenticate Inside Container
+
+Authenticate after starting the container:
+
+```bash
+docker exec -it -u dev claude-dev-env zsh
+claude
+# Follow the authentication URL in your browser
+```
+
+### Persistence
+
+**Authentication persists across container restarts** via the `archer-claude-auth` external volume. You only need to authenticate once per Docker host.
+
+The external volume is shared across all archer containers on the same host, so:
+- ✅ Authentication survives `docker compose down`
+- ✅ Authentication survives `docker compose build`
+- ✅ Authentication works for multiple archer container instances
+- ✅ Can be imported from host using the import script
+
+If you need to re-authenticate, just run `claude` again inside the container.
+
+---
+
 ## Telegram Setup
 
 To enable Claude's Telegram integration:
@@ -209,10 +254,16 @@ environment:
 ## Roadmap
 
 - [x] Basic Docker environment with Claude Code
-- [ ] Telegram bot integration (polling)
-- [ ] Persistent Claude session with internal monologue
-- [ ] Memory and journal system
-- [ ] Hourly reflection cron jobs
+- [x] Claude authentication persistence via external volume
+- [x] Telegram bot integration (polling)
+- [x] Persistent Claude session auto-start
+- [x] Memory and journal system structure
+- [x] Hourly reflection cron jobs
+- [x] Bypass permissions auto-acceptance (hands-free startup)
+- [x] Theme wizard skip via config file
+- [x] Complete automated container startup verified
+- [ ] Implement Claude message processing loop
+- [ ] Test end-to-end Telegram → Claude → Response flow
 - [ ] Webhook-based Telegram (future)
 - [ ] Migration to lighter base image (Alpine/Void experiment)
 
