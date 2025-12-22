@@ -251,6 +251,41 @@ environment:
 
 ---
 
+## Testing
+
+The Telegram bot integration includes comprehensive test coverage with unit, integration, and end-to-end tests. See [docs/TESTING.md](docs/TESTING.md) for complete testing guide.
+
+### Quick Test Commands
+
+```bash
+# Install test dependencies
+pip install -r requirements-dev.txt
+
+# Run all tests
+pytest
+
+# Run with coverage report
+pytest --cov --cov-report=html
+
+# Run specific test categories
+pytest tests/unit/ -m unit        # Unit tests only
+pytest tests/integration/         # Integration tests
+pytest tests/e2e/                 # End-to-end tests
+
+# Run in Docker
+docker compose run --rm claude-dev-env bash -c "cd /home/dev && /opt/venv/bin/pip install -r requirements-dev.txt && /opt/venv/bin/pytest tests/"
+```
+
+### Test Structure
+
+- **Unit tests**: Fast, isolated tests of individual functions (< 10s)
+- **Integration tests**: Module interaction tests with filesystem (< 30s)
+- **E2E tests**: Complete workflow validation (< 60s)
+
+**Coverage Goals**: 80% target, 70% minimum enforced in CI/CD
+
+---
+
 ## Roadmap
 
 - [x] Basic Docker environment with Claude Code

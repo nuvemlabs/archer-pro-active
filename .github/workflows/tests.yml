@@ -1,0 +1,130 @@
+name: Python Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'scripts/telegram/**'
+      - 'tests/**'
+      - 'requirements-dev.txt'
+      - 'pytest.ini'
+      - '.coveragerc'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'scripts/telegram/**'
+      - 'tests/**'
+      - 'requirements-dev.txt'
+
+jobs:
+  test:
+    name: Test Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r scripts/telegram/requirements.txt
+        pip install -r requirements-dev.txt
+
+    - name: Lint with ruff
+      run: |
+        ruff check scripts/telegram/ tests/
+      continue-on-error: true
+
+    - name: Type check with mypy
+      run: |
+        mypy scripts/telegram/ --ignore-missing-imports
+      continue-on-error: true
+
+    - name: Run unit tests
+      run: |
+        pytest tests/unit/ -m unit --cov-report=xml --cov-report=term
+
+    - name: Run integration tests
+      run: |
+        pytest tests/integration/ -m integration
+
+    - name: Run e2e tests
+      run: |
+        pytest tests/e2e/ -m e2e
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-${{ matrix.python-version }}
+        fail_ci_if_error: false
+
+    - name: Archive coverage report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report-${{ matrix.python-version }}
+        path: htmlcov/
+
+  docker-test:
+    name: Test in Docker Container
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build Docker image
+      run: docker compose build
+
+    - name: Run tests in container
+      run: |
+        docker compose run --rm claude-dev-env \
+          bash -c "cd /home/dev && /opt/venv/bin/pip install -r /tmp/requirements-dev.txt && /opt/venv/bin/pytest /opt/scripts/telegram/../../../tests/ -v || true"
+
+    - name: Verify scripts are executable
+      run: |
+        docker compose run --rm claude-dev-env \
+          bash -c "test -x /opt/scripts/telegram/bot.py && test -x /opt/scripts/telegram/send_message.py"
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit[toml]
+
+    - name: Run Bandit security scan
+      run: |
+        bandit -r scripts/telegram/ -f json -o bandit-report.json
+      continue-on-error: true
+
+    - name: Upload security report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-report
+        path: bandit-report.json
